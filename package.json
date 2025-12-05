@@ -1,0 +1,34 @@
+{
+  "name": "projectdiscovery-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for ProjectDiscovery tools integration - automated bug bounty reconnaissance",
+  "type": "module",
+  "bin": {
+    "projectdiscovery-mcp": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x build/index.js",
+    "dev": "tsc --watch",
+    "start": "node build/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "projectdiscovery",
+    "bug-bounty",
+    "security",
+    "reconnaissance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "files": [
+    "build"
+  ]
+}

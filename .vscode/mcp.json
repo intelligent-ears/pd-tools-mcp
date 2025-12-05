@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "projectdiscovery": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/build/index.js"],
+      "env": {
+        "PATH": "${env:PATH}:${env:HOME}/go/bin"
+      }
+    }
+  }
+}
