@@ -15,7 +15,7 @@ This MCP server provides comprehensive security reconnaissance capabilities:
 - **nuclei** - Vulnerability scanning with YAML templates
 
 ### Automated Workflow
-- **bug_bounty_workflow** - End-to-end reconnaissance pipeline that chains all tools together
+- **Bug Hunting workflow** - End-to-end reconnaissance pipeline that chains all tools together
 
 ## Workflow Diagram
 
