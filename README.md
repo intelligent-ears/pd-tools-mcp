@@ -20,46 +20,46 @@ This MCP server provides comprehensive security reconnaissance capabilities:
 ## Workflow Diagram
 
 ```
-                    🎯 Target Domain (e.g., example.com)
-                              │
-                              ▼
+                    Target Domain
+                          │
+                          ▼
         ┌─────────────────────────────────────────────┐
         │  Step 1: Subdomain Discovery (subfinder)    │
-        │  🔍 Find all subdomains via passive sources │
-        └──────────────────┬──────────────────────────┘
-                           │ 248 subdomains found
-                           ▼
-        ┌─────────────────────────────────────────────┐
-        │  Step 2: DNS Resolution (dnsx)              │
-        │  🌐 Resolve domains to IP addresses         │
-        └──────────────────┬──────────────────────────┘
-                           │ 336 resolved hosts
-                           ▼
-        ┌─────────────────────────────────────────────┐
-        │  Step 3: Port Scanning (naabu) [OPTIONAL]   │
-        │  🔎 Scan top ports on resolved hosts        │
-        └──────────────────┬──────────────────────────┘
-                           │ 1,010 open ports
-                           ▼
-        ┌─────────────────────────────────────────────┐
-        │  Step 4: HTTP Probing (httpx)               │
-        │  🌍 Identify live web services              │
-        └──────────────────┬──────────────────────────┘
-                           │ 79 live hosts
-                           ▼
-        ┌─────────────────────────────────────────────┐
-        │  Step 5: Web Crawling (katana) [OPTIONAL]   │
-        │  🕷️  Discover endpoints & paths              │
-        └──────────────────┬──────────────────────────┘
-                           │ Endpoints discovered
-                           ▼
-        ┌─────────────────────────────────────────────┐
-        │  Step 6: Vulnerability Scan (nuclei)        │
-        │  🛡️  Test for known vulnerabilities          │
+        │  Find all subdomains via passive sources    │
         └──────────────────┬──────────────────────────┘
                            │
                            ▼
-                  📊 Comprehensive Report
+        ┌─────────────────────────────────────────────┐
+        │  Step 2: DNS Resolution (dnsx)              │
+        │  Resolve domains to IP addresses            │
+        └──────────────────┬──────────────────────────┘
+                           │
+                           ▼
+        ┌─────────────────────────────────────────────┐
+        │  Step 3: Port Scanning (naabu) [OPTIONAL]   │
+        │  Scan top ports on resolved hosts           │
+        └──────────────────┬──────────────────────────┘
+                           │
+                           ▼
+        ┌─────────────────────────────────────────────┐
+        │  Step 4: HTTP Probing (httpx)               │
+        │  Identify live web services                 │
+        └──────────────────┬──────────────────────────┘
+                           │
+                           ▼
+        ┌─────────────────────────────────────────────┐
+        │  Step 5: Web Crawling (katana) [OPTIONAL]   │
+        │  Discover endpoints & paths                 │
+        └──────────────────┬──────────────────────────┘
+                           │
+                           ▼
+        ┌─────────────────────────────────────────────┐
+        │  Step 6: Vulnerability Scan (nuclei)        │
+        │  Test for known vulnerabilities             │
+        └──────────────────┬──────────────────────────┘
+                           │
+                           ▼
+                  Comprehensive Report
                   ├─ Attack surface mapping
                   ├─ Open ports & services
                   ├─ Live web applications
@@ -107,8 +107,8 @@ export PATH=$PATH:$(go env GOPATH)/bin
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd pdmcp
+git clone https://github.com/intelligent-ears/pd-tools-mcp
+cd pd-tools-mcp
 
 # Install dependencies
 npm install
@@ -253,7 +253,7 @@ Scan for vulnerabilities using templates.
 }
 ```
 
-### 7. bug_bounty_workflow
+### 7. Bug hunting workflow
 Execute complete automated reconnaissance workflow.
 
 **Input:**
@@ -294,14 +294,6 @@ Once configured with an MCP client like Claude Desktop, you can use natural lang
 
 > "Crawl https://example.com and find all endpoints with katana"
 
-## Security Considerations
-
-⚠️ **Important:**
-- Only scan domains you have permission to test
-- Bug bounty programs have specific rules - always follow them
-- Some tools may generate significant traffic
-- Respect rate limits and robots.txt
-- Be aware of legal implications of unauthorized scanning
 
 ## Development
 
@@ -316,38 +308,11 @@ npm run build
 npm start
 ```
 
-## Troubleshooting
-
-### Tools not found
-Ensure ProjectDiscovery tools are installed and in your PATH:
-```bash
-which subfinder dnsx naabu httpx katana nuclei
-```
-
-### Permission errors
-Some tools (especially naabu) may require elevated privileges for certain operations:
-```bash
-sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip $(which naabu)
-```
-
-### Rate limiting
-If you encounter rate limiting, configure API keys for subfinder:
-```bash
-# Create config file
-nano ~/.config/subfinder/provider-config.yaml
-```
-
-Add your API keys for services like Shodan, Censys, etc.
-
-## License
-
-MIT
-
 ## Credits
 
 Built with:
 - [Model Context Protocol SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- [ProjectDiscovery Tools](https://projectdiscovery.io)
+- [ProjectDiscovery Tools](https://github.com/projectdiscovery)
 
 ## Contributing
 
