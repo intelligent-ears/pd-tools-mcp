@@ -263,6 +263,14 @@ Execute complete automated reconnaissance workflow.
 - `vulnerabilityScan` (boolean, optional): Include vulnerability scanning (default: true)
 - `severityFilter` (array of strings, optional): Nuclei severity filter
 
+**Rate Limiting Options:**
+- `maxCrawlUrls` (number, optional): Maximum URLs to crawl (default: 10)
+- `maxScanUrls` (number, optional): Maximum URLs to scan with Nuclei (default: 20)
+- `maxTopPorts` (number, optional): Maximum top ports for Naabu (default: 100)
+- `batchSize` (number, optional): Batch size for DNS/HTTP requests (default: 50)
+- `delayBetweenBatches` (number, optional): Delay in milliseconds between batches (default: 1000)
+- `crawlDepth` (number, optional): Crawl depth for Katana (default: 2)
+
 **Example:**
 ```json
 {
@@ -270,7 +278,23 @@ Execute complete automated reconnaissance workflow.
   "portScan": true,
   "crawl": true,
   "vulnerabilityScan": true,
-  "severityFilter": ["critical", "high"]
+  "severityFilter": ["critical", "high"],
+  "maxCrawlUrls": 50,
+  "maxScanUrls": 100,
+  "maxTopPorts": 200,
+  "batchSize": 25,
+  "delayBetweenBatches": 2000,
+  "crawlDepth": 3
+}
+```
+
+**Example (Conservative Rate Limiting):**
+```json
+{
+  "domain": "example.com",
+  "maxCrawlUrls": 5,
+  "maxScanUrls": 10,
+  "delayBetweenBatches": 5000
 }
 ```
 
@@ -281,6 +305,70 @@ Execute complete automated reconnaissance workflow.
 4. **HTTP Probing** - Find live web services
 5. **Web Crawling** - Discover endpoints (optional)
 6. **Vulnerability Scanning** - Detect security issues (optional)
+
+## Rate Limiting
+
+The bug bounty workflow includes configurable rate limiting to prevent overwhelming target infrastructure and respect responsible disclosure practices.
+
+### Rate Limiting Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `maxCrawlUrls` | 10 | Maximum number of URLs to crawl with Katana |
+| `maxScanUrls` | 20 | Maximum number of URLs to scan with Nuclei |
+| `maxTopPorts` | 100 | Maximum number of top ports to scan with Naabu |
+| `batchSize` | 50 | Number of items to process in each batch |
+| `delayBetweenBatches` | 1000 | Delay in milliseconds between batches |
+| `crawlDepth` | 2 | Maximum depth for web crawling |
+
+### Usage Examples
+
+**Aggressive Scan (use responsibly):**
+```json
+{
+  "domain": "example.com",
+  "maxCrawlUrls": 100,
+  "maxScanUrls": 200,
+  "maxTopPorts": 1000,
+  "batchSize": 100,
+  "delayBetweenBatches": 500,
+  "crawlDepth": 3
+}
+```
+
+**Conservative Scan (recommended for production sites):**
+```json
+{
+  "domain": "example.com",
+  "maxCrawlUrls": 5,
+  "maxScanUrls": 10,
+  "maxTopPorts": 50,
+  "batchSize": 10,
+  "delayBetweenBatches": 5000,
+  "crawlDepth": 1
+}
+```
+
+**Stealth Scan (minimal footprint):**
+```json
+{
+  "domain": "example.com",
+  "maxCrawlUrls": 3,
+  "maxScanUrls": 5,
+  "maxTopPorts": 20,
+  "batchSize": 5,
+  "delayBetweenBatches": 10000,
+  "crawlDepth": 1
+}
+```
+
+### Best Practices
+
+- **Start Conservative**: Begin with lower limits and increase gradually
+- **Respect Target Infrastructure**: Use appropriate delays to avoid overwhelming servers
+- **Bug Bounty Programs**: Always follow the program's rules of engagement
+- **Production Systems**: Use extended delays and lower batch sizes
+- **Monitor Logs**: Check stderr output for rate limiting status messages
 
 ## Example Usage
 

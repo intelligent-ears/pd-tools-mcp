@@ -5,11 +5,21 @@ import { executeHttpx } from "../tools/httpx.js";
 import { executeKatana } from "../tools/katana.js";
 import { executeNuclei } from "../tools/nuclei.js";
 
+export interface RateLimitOptions {
+  maxCrawlUrls?: number;        // Max URLs to crawl (default: 10)
+  maxScanUrls?: number;          // Max URLs to scan with Nuclei (default: 20)
+  maxTopPorts?: number;          // Max top ports for Naabu (default: 100)
+  batchSize?: number;            // Batch size for DNS/HTTP requests (default: 50)
+  delayBetweenBatches?: number;  // Delay in ms between batches (default: 1000)
+  crawlDepth?: number;           // Crawl depth for Katana (default: 2)
+}
+
 export interface BugBountyWorkflowOptions {
   portScan: boolean;
   crawl: boolean;
   vulnerabilityScan: boolean;
   severityFilter?: string[];
+  rateLimit?: RateLimitOptions;
 }
 
 export interface BugBountyWorkflowResult {
@@ -36,11 +46,50 @@ export interface BugBountyWorkflowResult {
   findings: any[];
 }
 
+// Helper function to process items in batches with rate limiting
+async function processBatch<T, R>(
+  items: T[],
+  batchSize: number,
+  delay: number,
+  processFn: (batch: T[]) => Promise<R[]>
+): Promise<R[]> {
+  const results: R[] = [];
+  
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    console.error(`  Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(items.length / batchSize)} (${batch.length} items)...`);
+    
+    const batchResults = await processFn(batch);
+    results.push(...batchResults);
+    
+    // Add delay between batches (except for the last batch)
+    if (i + batchSize < items.length && delay > 0) {
+      console.error(`  Rate limiting: waiting ${delay}ms before next batch...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  return results;
+}
+
 export async function runBugBountyWorkflow(
   domain: string,
   options: BugBountyWorkflowOptions
 ): Promise<BugBountyWorkflowResult> {
   const startTime = Date.now();
+  
+  // Apply rate limit defaults
+  const rateLimit: Required<RateLimitOptions> = {
+    maxCrawlUrls: options.rateLimit?.maxCrawlUrls ?? 10,
+    maxScanUrls: options.rateLimit?.maxScanUrls ?? 20,
+    maxTopPorts: options.rateLimit?.maxTopPorts ?? 100,
+    batchSize: options.rateLimit?.batchSize ?? 50,
+    delayBetweenBatches: options.rateLimit?.delayBetweenBatches ?? 1000,
+    crawlDepth: options.rateLimit?.crawlDepth ?? 2,
+  };
+  
+  console.error(`⚙️  Rate Limiting Config: maxCrawl=${rateLimit.maxCrawlUrls}, maxScan=${rateLimit.maxScanUrls}, batchSize=${rateLimit.batchSize}, delay=${rateLimit.delayBetweenBatches}ms`);
+  
   const result: BugBountyWorkflowResult = {
     summary: {
       domain,
@@ -85,8 +134,8 @@ export async function runBugBountyWorkflow(
 
     // Step 3: Port Scanning (optional)
     if (options.portScan) {
-      console.error(`🔎 Step 3: Scanning ports on ${resolvedDomains.length} hosts...`);
-      const naabuResult = await executeNaabu(resolvedDomains, undefined, 100);
+      console.error(`🔎 Step 3: Scanning ports on ${resolvedDomains.length} hosts (top ${rateLimit.maxTopPorts} ports)...`);
+      const naabuResult = await executeNaabu(resolvedDomains, undefined, rateLimit.maxTopPorts);
       result.steps.portScanning = naabuResult;
       result.summary.totalOpenPorts = naabuResult.count;
     }
@@ -108,17 +157,19 @@ export async function runBugBountyWorkflow(
 
     // Step 5: Web Crawling (optional)
     if (options.crawl && liveUrls.length > 0) {
-      console.error(`🕷️  Step 5: Crawling ${liveUrls.length} URLs...`);
-      const katanaResult = await executeKatana(liveUrls.slice(0, 10), 2); // Limit to 10 URLs
+      const urlsToCrawl = liveUrls.slice(0, rateLimit.maxCrawlUrls);
+      console.error(`🕷️  Step 5: Crawling ${urlsToCrawl.length} URLs (depth ${rateLimit.crawlDepth})...`);
+      const katanaResult = await executeKatana(urlsToCrawl, rateLimit.crawlDepth);
       result.steps.webCrawling = katanaResult;
       result.summary.totalEndpoints = katanaResult.count;
     }
 
     // Step 6: Vulnerability Scanning (optional)
     if (options.vulnerabilityScan && liveUrls.length > 0) {
-      console.error(`🛡️  Step 6: Scanning for vulnerabilities...`);
+      const urlsToScan = liveUrls.slice(0, rateLimit.maxScanUrls);
+      console.error(`🛡️  Step 6: Scanning ${urlsToScan.length} URLs for vulnerabilities...`);
       const nucleiResult = await executeNuclei(
-        liveUrls.slice(0, 20), // Limit to 20 URLs for faster results
+        urlsToScan,
         undefined,
         options.severityFilter || ["critical", "high", "medium"]
       );

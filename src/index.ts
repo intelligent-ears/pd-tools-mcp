@@ -192,6 +192,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description:
                 "Nuclei severity filter (critical, high, medium, low)",
             },
+            maxCrawlUrls: {
+              type: "number",
+              description: "Maximum URLs to crawl (default: 10)",
+            },
+            maxScanUrls: {
+              type: "number",
+              description: "Maximum URLs to scan with Nuclei (default: 20)",
+            },
+            maxTopPorts: {
+              type: "number",
+              description: "Maximum top ports for Naabu (default: 100)",
+            },
+            batchSize: {
+              type: "number",
+              description: "Batch size for DNS/HTTP requests (default: 50)",
+            },
+            delayBetweenBatches: {
+              type: "number",
+              description: "Delay in milliseconds between batches (default: 1000)",
+            },
+            crawlDepth: {
+              type: "number",
+              description: "Crawl depth for Katana (default: 2)",
+            },
           },
           required: ["domain"],
         },
@@ -304,19 +328,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "bug_bounty_workflow": {
-        const { domain, portScan, crawl, vulnerabilityScan, severityFilter } =
-          args as {
-            domain: string;
-            portScan?: boolean;
-            crawl?: boolean;
-            vulnerabilityScan?: boolean;
-            severityFilter?: string[];
-          };
+        const {
+          domain,
+          portScan,
+          crawl,
+          vulnerabilityScan,
+          severityFilter,
+          maxCrawlUrls,
+          maxScanUrls,
+          maxTopPorts,
+          batchSize,
+          delayBetweenBatches,
+          crawlDepth,
+        } = args as {
+          domain: string;
+          portScan?: boolean;
+          crawl?: boolean;
+          vulnerabilityScan?: boolean;
+          severityFilter?: string[];
+          maxCrawlUrls?: number;
+          maxScanUrls?: number;
+          maxTopPorts?: number;
+          batchSize?: number;
+          delayBetweenBatches?: number;
+          crawlDepth?: number;
+        };
         const result = await runBugBountyWorkflow(domain, {
           portScan: portScan ?? true,
           crawl: crawl ?? true,
           vulnerabilityScan: vulnerabilityScan ?? true,
           severityFilter,
+          rateLimit: {
+            maxCrawlUrls,
+            maxScanUrls,
+            maxTopPorts,
+            batchSize,
+            delayBetweenBatches,
+            crawlDepth,
+          },
         });
         return {
           content: [
